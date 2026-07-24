@@ -1,0 +1,9 @@
+{
+  "incident_id": "inc-2026-07-22-001",
+  "title": "checkout-api error rate spike",
+  "severity": "SEV2",
+  "service": "checkout-api",
+  "started_at": "2026-07-22T22:12:00Z",
+  "summary": "P95 latency jumped and 500 errors increased after a recent deploy.",
+  "initial_context": "Suspect timeout config change in the latest release."
+}
