@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 from models import Incident
 from tools import query_logs, query_metrics
+from hypothesis import form_hypothesis
 
 AgentState = Literal["RECEIVED", "INVESTIGATE", "DONE", "FAILED"]
 
@@ -14,6 +15,7 @@ class IncidentRecord:
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     error: str | None = None
     evidence: dict[str, Any] = field(default_factory=dict)
+    hypothesis: dict[str, Any] = field(default_factory=dict)
 
 
 def transition(record: IncidentRecord, next_state: AgentState, error: str | None = None) -> IncidentRecord:
@@ -46,7 +48,14 @@ def process_incident(incident: Incident) -> IncidentRecord:
     print(f"[{record.state}] starting investigation for {incident.service}")
 
     record.evidence = investigate(incident)
+    record.hypothesis = form_hypothesis(record.evidence) 
 
+    print("  - hypothesis:")
+    print(f"    id: {record.hypothesis['id']}")
+    print(f"    summary: {record.hypothesis['summary']}")
+    print(f"    confidence: {record.hypothesis['confidence']}")
+    print(f"    recommended_action: {record.hypothesis['recommended_action']}")
+    
     record = transition(record, "DONE")
     print(f"[{record.state}] investigation finished (placeholder)")
 

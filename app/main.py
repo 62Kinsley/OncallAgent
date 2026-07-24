@@ -22,3 +22,4 @@ if __name__ == "__main__":
     record = process_incident(incident)
     print("---")
     print(f"Final state: {record.state}")
+    print(f"Hypothesis: {record.hypothesis['id']} ({record.hypothesis['confidence']})")
