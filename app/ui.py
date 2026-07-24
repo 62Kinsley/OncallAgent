@@ -14,7 +14,7 @@ from runtime import process_incident
 
 st.set_page_config(page_title="OncallAgent", page_icon="🦞", layout="centered")
 st.title("OncallAgent")
-st.caption("Local MVP: incident -> investigate -> hypothesis")
+st.caption("Local MVP: incident -> investigate -> hypothesis -> LLM explanation")
 
 sample_path = ROOT_DIR / "data" / "sample_incident.json"
 
@@ -38,6 +38,7 @@ if st.button("Run Investigation", type="primary"):
         "state": record.state,
         "hypothesis": record.hypothesis,
         "evidence": record.evidence,
+        "llm_explanation": record.llm_explanation,
     }
 
 record_data = st.session_state.get("record")
@@ -53,6 +54,12 @@ st.write(f"- ID: `{hypothesis.get('id')}`")
 st.write(f"- Summary: {hypothesis.get('summary')}")
 st.write(f"- Confidence: `{hypothesis.get('confidence')}`")
 st.write(f"- Recommended action: {hypothesis.get('recommended_action')}")
+
+st.write("**LLM explanation**")
+if record_data.get("llm_explanation"):
+    st.write(record_data["llm_explanation"])
+else:
+    st.info("No LLM explanation. Set OPENAI_API_KEY in `.env` (Bailian/DashScope).")
 
 with st.expander("Evidence"):
     st.json(record_data["evidence"])
