@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
+
 from hypothesis import form_hypothesis
 from llm import explain_hypothesis
 from models import Incident
-from tools import query_logs, query_metrics
+from tools import post_slack_summary, query_logs, query_metrics
 
 AgentState = Literal["RECEIVED", "INVESTIGATE", "DONE", "FAILED"]
 
@@ -18,6 +19,7 @@ class IncidentRecord:
     evidence: dict[str, Any] = field(default_factory=dict)
     hypothesis: dict[str, Any] = field(default_factory=dict)
     llm_explanation: str | None = None
+    slack_result: dict[str, Any] = field(default_factory=dict)
 
 
 def transition(record: IncidentRecord, next_state: AgentState, error: str | None = None) -> IncidentRecord:
@@ -69,6 +71,18 @@ def process_incident(incident: Incident) -> IncidentRecord:
         print(f"    {record.llm_explanation}")
     else:
         print("  - llm explanation: skipped (no OPENAI_API_KEY)")
+
+    record.slack_result = post_slack_summary(
+        incident=incident.model_dump(),
+        hypothesis=record.hypothesis,
+        llm_explanation=record.llm_explanation,
+    )
+    if record.slack_result.get("skipped"):
+        print(f"  - slack: skipped ({record.slack_result.get('reason')})")
+    elif record.slack_result.get("ok"):
+        print("  - slack: message sent")
+    else:
+        print(f"  - slack: failed ({record.slack_result})")
 
     record = transition(record, "DONE")
     print(f"[{record.state}] investigation finished")

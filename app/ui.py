@@ -14,7 +14,7 @@ from runtime import process_incident
 
 st.set_page_config(page_title="OncallAgent", page_icon="🦞", layout="centered")
 st.title("OncallAgent")
-st.caption("Local MVP: incident -> investigate -> hypothesis -> LLM explanation")
+st.caption("Local MVP: incident -> investigate -> hypothesis -> LLM -> Slack")
 
 sample_path = ROOT_DIR / "data" / "sample_incident.json"
 
@@ -39,6 +39,7 @@ if st.button("Run Investigation", type="primary"):
         "hypothesis": record.hypothesis,
         "evidence": record.evidence,
         "llm_explanation": record.llm_explanation,
+        "slack_result": record.slack_result,
     }
 
 record_data = st.session_state.get("record")
@@ -60,6 +61,15 @@ if record_data.get("llm_explanation"):
     st.write(record_data["llm_explanation"])
 else:
     st.info("No LLM explanation. Set OPENAI_API_KEY in `.env` (Bailian/DashScope).")
+
+st.write("**Slack**")
+slack_result = record_data.get("slack_result") or {}
+if slack_result.get("skipped"):
+    st.info(f"Slack skipped: {slack_result.get('reason')}. Set SLACK_WEBHOOK_URL in `.env`.")
+elif slack_result.get("ok"):
+    st.success("Slack message sent.")
+else:
+    st.error(f"Slack failed: {slack_result}")
 
 with st.expander("Evidence"):
     st.json(record_data["evidence"])
