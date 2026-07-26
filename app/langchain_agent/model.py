@@ -11,7 +11,7 @@ class ChatModelFactory:
     """Build the chat model used by the LangGraph agent."""
 
     def generator(self) -> Optional[ChatOpenAI]:
-        api_key = os.getenv("API_KEY", "").strip()
+        api_key = os.getenv("OPENAI_API_KEY", "").strip()
         if not api_key:
             return None
 

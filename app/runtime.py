@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from agent_loop import run_agent_loop
+from langchain_agent.agent import run_langgraph_agent
 from hypothesis import form_hypothesis
 from models import Incident
 from tools import post_slack_summary, query_logs, query_metrics
@@ -51,11 +51,11 @@ def process_incident(incident: Incident) -> IncidentRecord:
     record = transition(record, "INVESTIGATE")
     print(f"[{record.state}] starting investigation for {incident.service}")
 
-    agent_result = run_agent_loop(incident.model_dump())
+    agent_result = run_langgraph_agent(incident.model_dump())
     record.agent_trace = agent_result.get("trace", [])
 
     if agent_result.get("ok"):
-        record.mode = "tool_calling_agent"
+        record.mode = "langgraph_agent"
         record.evidence = agent_result.get("evidence") or {}
         record.hypothesis = agent_result["hypothesis"]
         record.llm_explanation = agent_result.get("llm_explanation")
