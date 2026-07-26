@@ -5,14 +5,14 @@ A Python on-call incident response agent for local investigation demos.
 Given an incident signal, it:
 
 1. Runs a small state machine (`RECEIVED → INVESTIGATE → DONE`)
-2. Starts a **Tool Calling Agent Loop** (Bailian / DashScope)
+2. Starts a **LangChain `create_agent`** investigation loop
 3. Lets the model choose tools: `query_logs`, `query_metrics`, `submit_investigation_result`
 4. Falls back to a rule-based hypothesis engine if the agent is unavailable
 5. Posts a summary to Slack
 6. Shows results in a Streamlit UI
 
-> Current stage: **Tool Calling Agent MVP** (mock logs/metrics).  
-> Real CloudWatch and remediation PR are next.
+> Current stage: **LangChain agent MVP** (mock logs/metrics).  
+> Real CloudWatch and remediation PR are next. RAG is not required for this stage.
 
 ## Demo flow
 
@@ -23,7 +23,7 @@ sample incident JSON
    state machine (runtime)
         │
         ▼
-   Tool Calling Agent Loop
+   LangChain create_agent
         ├─ query_logs (mock)
         ├─ query_metrics (mock)
         └─ submit_investigation_result
@@ -38,16 +38,17 @@ sample incident JSON
 ## What works now
 
 - [x] Incident model + JSON input
-- [x] State machine
+- [x] State machine runtime
 - [x] Mock investigation tools (`query_logs`, `query_metrics`)
-- [x] Hand-written tool registry (schemas + handlers)
-- [x] ReAct-style system prompt
-- [x] Tool Calling agent loop
+- [x] LangChain `@tool` wrappers
+- [x] ChatOpenAI via Alibaba Bailian (OpenAI-compatible endpoint)
+- [x] LangChain `create_agent` with `system_prompt`
+- [x] Structured final answer via `submit_investigation_result`
 - [x] Rule-based hypothesis fallback
 - [x] Streamlit UI
-- [x] LLM via Alibaba Bailian (OpenAI-compatible API)
 - [x] Slack Incoming Webhook notifications
 - [ ] Real AWS CloudWatch lookups
+- [ ] Optional runbook RAG
 - [ ] Optional GitHub issue/PR remediation
 - [ ] Short-lived credentials (e.g. Teleport)
 
@@ -56,29 +57,34 @@ sample incident JSON
 ```text
 OncallAgent/
 ├── app/
-│   ├── main.py             # CLI entrypoint
-│   ├── ui.py               # Streamlit UI
-│   ├── models.py           # Incident schema
-│   ├── runtime.py          # state machine + orchestration
-│   ├── agent_loop.py       # Tool Calling loop
-│   ├── agent_prompt.py     # system prompt
-│   ├── tool_registry.py    # tool schemas + handlers
-│   ├── hypothesis.py       # rule-based fallback
-│   ├── llm.py              # legacy explanation helper
+│   ├── main.py                 # CLI entrypoint
+│   ├── ui.py                   # Streamlit UI
+│   ├── models.py               # Incident schema
+│   ├── runtime.py              # state machine + orchestration
+│   ├── hypothesis.py           # rule-based fallback
+│   ├── langchain_agent/
+│   │   ├── model.py            # ChatModelFactory (ChatOpenAI + Bailian)
+│   │   ├── tools.py            # @tool wrappers
+│   │   ├── prompt.py           # system prompt
+│   │   └── agent.py            # create_agent + result parsing
 │   └── tools/
-│       ├── logs.py         # mock log lookup
-│       ├── metrics.py      # mock metrics lookup
-│       └── slack.py        # Slack webhook sender
+│       ├── logs.py             # mock log lookup
+│       ├── metrics.py          # mock metrics lookup
+│       └── slack.py            # Slack webhook sender
 ├── data/
 │   └── sample_incident.json
 ├── requirements.txt
 └── README.md
 ```
 
+> Note: legacy hand-written loop files may still exist as backup
+> (`agent_loop.py`, `tool_registry.py`, `agent_prompt.py`).
+> Active path is `runtime.py` → `langchain_agent.agent`.
+
 ## Prerequisites
 
 - Python 3.11+
-- Alibaba Bailian / DashScope API key (for Tool Calling mode)
+- Alibaba Bailian / DashScope API key
 - (Optional) Slack Incoming Webhook URL
 
 If the API key is missing, the runtime falls back to the rule-based pipeline.
@@ -104,10 +110,11 @@ OPENAI_MODEL=qwen-plus
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
 ```
 
-Notes:
+Important:
 
-- Variable names keep the `OPENAI_*` prefix because we use the OpenAI-compatible SDK.
-- `.env` is gitignored.
+- Use **`OPENAI_API_KEY`** (not `API_KEY`)
+- Variable names keep the `OPENAI_*` prefix because we use the OpenAI-compatible SDK
+- `.env` is gitignored
 
 ## Run (CLI)
 
@@ -115,12 +122,10 @@ Notes:
 python app/main.py
 ```
 
-Successful Tool Calling runs should show:
+Successful runs should show:
 
-- `mode: tool_calling_agent`
-- `agent tool_call: query_logs(...)`
-- `agent tool_call: query_metrics(...)`
-- `agent tool_call: submit_investigation_result(...)`
+- `Mode: langgraph_agent` (or equivalent agent mode)
+- a hypothesis id/confidence
 - Slack send/skip status
 - `Final state: DONE`
 
@@ -138,16 +143,20 @@ Then:
 
 ## Design notes
 
-- Keep agent core (`runtime` / `agent_loop` / `tools`) separate from UI
-- Tools use hand-written schemas (no LangChain `@tool` required)
+- Agent orchestration uses LangChain `create_agent`
+- Tools use `@tool` wrappers over existing `app/tools/*` implementations
+- System prompt includes operational rules (max one call per evidence tool, ignore tool `error` payloads, confidence rubric)
 - Rule engine remains as fallback, not the primary decision path
+- No RAG in this stage: investigation relies on tools for live/mock evidence
 - Secrets stay in `.env`, never in git
 
 ## Roadmap
 
 - Replace mock logs/metrics with CloudWatch via `boto3`
-- Add lightweight middleware (max turns, audit logging, safety checks)
-- Add optional GitHub issue/PR creation (off by default)
+- Add lightweight middleware (timeouts, audit logging, safety checks)
+- Optional runbook / PIR RAG
+- Optional GitHub issue/PR creation (off by default)
+- Remove legacy hand-written agent loop after the LangChain path stays stable
 - Add basic tests (`pytest`) and richer incident scenarios
 
 ## License
