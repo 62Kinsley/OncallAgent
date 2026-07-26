@@ -14,7 +14,7 @@ from runtime import process_incident
 
 st.set_page_config(page_title="OncallAgent", page_icon="🦞", layout="centered")
 st.title("OncallAgent")
-st.caption("Local MVP: incident -> investigate -> hypothesis -> LLM -> Slack")
+st.caption("Tool Calling Agent: incident -> tools -> hypothesis -> Slack")
 
 sample_path = ROOT_DIR / "data" / "sample_incident.json"
 
@@ -36,10 +36,12 @@ if st.button("Run Investigation", type="primary"):
     record = process_incident(incident)
     st.session_state["record"] = {
         "state": record.state,
+        "mode": record.mode,
         "hypothesis": record.hypothesis,
         "evidence": record.evidence,
         "llm_explanation": record.llm_explanation,
         "slack_result": record.slack_result,
+        "agent_trace": record.agent_trace,
     }
 
 record_data = st.session_state.get("record")
@@ -48,6 +50,7 @@ if not record_data:
 
 st.subheader("3. Result")
 st.write(f"**Final state:** `{record_data['state']}`")
+st.write(f"**Mode:** `{record_data.get('mode')}`")
 
 hypothesis = record_data["hypothesis"]
 st.write("**Hypothesis**")
@@ -56,20 +59,23 @@ st.write(f"- Summary: {hypothesis.get('summary')}")
 st.write(f"- Confidence: `{hypothesis.get('confidence')}`")
 st.write(f"- Recommended action: {hypothesis.get('recommended_action')}")
 
-st.write("**LLM explanation**")
+st.write("**Explanation**")
 if record_data.get("llm_explanation"):
     st.write(record_data["llm_explanation"])
 else:
-    st.info("No LLM explanation. Set OPENAI_API_KEY in `.env` (Bailian/DashScope).")
+    st.info("No explanation available.")
 
 st.write("**Slack**")
 slack_result = record_data.get("slack_result") or {}
 if slack_result.get("skipped"):
-    st.info(f"Slack skipped: {slack_result.get('reason')}. Set SLACK_WEBHOOK_URL in `.env`.")
+    st.info(f"Slack skipped: {slack_result.get('reason')}")
 elif slack_result.get("ok"):
     st.success("Slack message sent.")
 else:
     st.error(f"Slack failed: {slack_result}")
 
+with st.expander("Agent trace"):
+    st.json(record_data.get("agent_trace") or [])
+
 with st.expander("Evidence"):
-    st.json(record_data["evidence"])
+    st.json(record_data.get("evidence") or {})
