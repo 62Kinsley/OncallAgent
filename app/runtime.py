@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from langchain_agent.agent import run_langgraph_agent
 from hypothesis import form_hypothesis
-from models import Incident
+from incident import Incident
 from tools import post_slack_summary, query_logs, query_metrics
 
 AgentState = Literal["RECEIVED", "INVESTIGATE", "DONE", "FAILED"]

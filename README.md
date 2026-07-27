@@ -59,7 +59,7 @@ OncallAgent/
 ├── app/
 │   ├── main.py                 # CLI entrypoint
 │   ├── ui.py                   # Streamlit UI
-│   ├── models.py               # Incident schema
+│   ├── incident.py             # Incident schema
 │   ├── runtime.py              # state machine + orchestration
 │   ├── hypothesis.py           # rule-based fallback
 │   ├── langchain_agent/

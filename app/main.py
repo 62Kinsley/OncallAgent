@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from models import Incident
+from incident import Incident
 from runtime import process_incident
 
 
@@ -18,9 +18,11 @@ if __name__ == "__main__":
     print(f"- Severity: {incident.severity}")
     print(f"- Title: {incident.title}")
     print(f"- Summary: {incident.summary}")
+
     print("---")
     record = process_incident(incident)
     print("---")
+    
     print(f"Final state: {record.state}")
     print(f"Mode: {record.mode}")
     print(f"Hypothesis: {record.hypothesis['id']} ({record.hypothesis['confidence']})")

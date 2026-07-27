@@ -9,7 +9,7 @@ ROOT_DIR = APP_DIR.parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
-from models import Incident
+from incident import Incident
 from runtime import process_incident
 
 st.set_page_config(page_title="OncallAgent", page_icon="🦞", layout="centered")
