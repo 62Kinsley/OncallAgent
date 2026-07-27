@@ -6,6 +6,7 @@ import streamlit as st
 
 APP_DIR = Path(__file__).resolve().parent
 ROOT_DIR = APP_DIR.parent
+DATA_DIR = ROOT_DIR / "data"
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
@@ -16,16 +17,23 @@ st.set_page_config(page_title="OncallAgent", page_icon="🦞", layout="centered"
 st.title("OncallAgent")
 st.caption("Tool Calling Agent: incident -> tools -> hypothesis -> Slack")
 
-sample_path = ROOT_DIR / "data" / "sample_incident.json"
+sample_files = sorted(DATA_DIR.glob("sample_*.json"))
+sample_labels = {path.name: path for path in sample_files}
 
 st.subheader("1. Load incident")
-if st.button("Load sample incident"):
-    raw = json.loads(sample_path.read_text(encoding="utf-8"))
+if not sample_labels:
+    st.error("No sample_*.json files found in data/")
+    st.stop()
+
+selected_name = st.selectbox("Sample incident", options=list(sample_labels.keys()), index=0)
+if st.button("Load selected sample"):
+    raw = json.loads(sample_labels[selected_name].read_text(encoding="utf-8"))
     st.session_state["incident_raw"] = raw
+    st.session_state.pop("record", None)
 
 incident_raw = st.session_state.get("incident_raw")
 if not incident_raw:
-    st.info("Click the button above to load a sample incident.")
+    st.info("Choose a sample above, then click **Load selected sample**.")
     st.stop()
 
 st.json(incident_raw)

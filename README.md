@@ -122,7 +122,14 @@ Important:
 ## Run (CLI)
 
 ```bash
+# default sample
 python app/main.py
+
+# list available samples
+python app/main.py --list
+
+# pick a specific sample
+python app/main.py --incident data/sample_db_saturation.json
 ```
 
 Successful runs should show:
@@ -140,7 +147,7 @@ streamlit run app/ui.py
 
 Then:
 
-1. Click **Load sample incident**
+1. Choose a sample from the dropdown and click **Load selected sample**
 2. Click **Run Investigation**
 3. Review mode, hypothesis, explanation, Slack status, agent trace, and evidence
 
