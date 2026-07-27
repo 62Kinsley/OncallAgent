@@ -77,9 +77,7 @@ OncallAgent/
 └── README.md
 ```
 
-> Note: legacy hand-written loop files may still exist as backup
-> (`agent_loop.py`, `tool_registry.py`, `agent_prompt.py`).
-> Active path is `runtime.py` → `langchain_agent.agent`.
+Active path: `runtime.py` → `langchain_agent.agent`.
 
 ## Prerequisites
 
@@ -156,7 +154,6 @@ Then:
 - Add lightweight middleware (timeouts, audit logging, safety checks)
 - Optional runbook / PIR RAG
 - Optional GitHub issue/PR creation (off by default)
-- Remove legacy hand-written agent loop after the LangChain path stays stable
 - Add basic tests (`pytest`) and richer incident scenarios
 
 ## License
