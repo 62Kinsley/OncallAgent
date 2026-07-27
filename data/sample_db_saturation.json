@@ -1,0 +1,9 @@
+{
+  "incident_id": "inc-2026-07-22-003",
+  "title": "orders-db connection pool saturation",
+  "severity": "SEV1",
+  "service": "orders-db",
+  "started_at": "2026-07-22T22:25:00Z",
+  "summary": "Database connection pool is near saturation and wait time is elevated.",
+  "initial_context": "Checkout traffic is high; connections may not be released correctly."
+}

@@ -1,3 +1,12 @@
+"""
+Ticket runtime / state machine.
+
+Responsibilities:
+  - Own states (RECEIVED → INVESTIGATE → DONE | FAILED)
+  - Call LangChain agent for investigation
+  - Rule-based fallback when agent is unavailable
+  - Send final Slack summary
+"""
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
@@ -5,8 +14,9 @@ from typing import Any, Literal
 from langchain_agent.agent import run_langgraph_agent
 from hypothesis import form_hypothesis
 from incident import Incident
-from tools import post_slack_summary, query_logs, query_metrics
+from adapters import post_slack_summary, query_logs, query_metrics
 
+# --- Own states ---
 AgentState = Literal["RECEIVED", "INVESTIGATE", "DONE", "FAILED"]
 
 
@@ -25,14 +35,16 @@ class IncidentRecord:
 
 
 def transition(record: IncidentRecord, next_state: AgentState, error: str | None = None) -> IncidentRecord:
+    """Advance ticket state and stamp updated_at."""
     record.state = next_state
     record.updated_at = datetime.now(timezone.utc).isoformat()
     record.error = error
     return record
 
 
+# --- Fallback: tools → rule hypothesis (when agent unavailable) ---
 def _fallback_pipeline(incident: Incident) -> tuple[dict[str, Any], dict[str, Any], str | None]:
-    """Old fixed pipeline: tools -> rule hypothesis."""
+    """Fixed pipeline: query_logs + query_metrics → form_hypothesis."""
     logs = query_logs(incident.service)
     metrics = query_metrics(incident.service)
     evidence = {"logs": logs, "metrics": metrics}
@@ -51,6 +63,7 @@ def process_incident(incident: Incident) -> IncidentRecord:
     record = transition(record, "INVESTIGATE")
     print(f"[{record.state}] starting investigation for {incident.service}")
 
+    # --- Call agent ---
     agent_result = run_langgraph_agent(incident.model_dump())
     record.agent_trace = agent_result.get("trace", [])
 
@@ -61,6 +74,7 @@ def process_incident(incident: Incident) -> IncidentRecord:
         record.llm_explanation = agent_result.get("llm_explanation")
         print("  - mode: tool_calling_agent")
     else:
+        # --- Fallback ---
         record.mode = "rule_fallback"
         print(f"  - agent unavailable ({agent_result.get('reason')}); using rule fallback")
         evidence, hypothesis, explanation = _fallback_pipeline(incident)
@@ -77,6 +91,7 @@ def process_incident(incident: Incident) -> IncidentRecord:
         print("  - explanation:")
         print(f"    {record.llm_explanation}")
 
+    # --- Send final Slack ---
     record.slack_result = post_slack_summary(
         incident=incident.model_dump(),
         hypothesis=record.hypothesis,

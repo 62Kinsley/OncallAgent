@@ -1,0 +1,9 @@
+{
+  "incident_id": "inc-2026-07-22-002",
+  "title": "checkout-api memory utilization rising",
+  "severity": "SEV2",
+  "service": "checkout-api",
+  "started_at": "2026-07-22T22:20:00Z",
+  "summary": "Memory utilization crossed 85% and kept climbing for 15 minutes.",
+  "initial_context": "Possible memory leak after the last deploy."
+}

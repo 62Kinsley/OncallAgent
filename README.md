@@ -64,15 +64,20 @@ OncallAgent/
 │   ├── hypothesis.py           # rule-based fallback
 │   ├── langchain_agent/
 │   │   ├── model.py            # ChatModelFactory (ChatOpenAI + Bailian)
-│   │   ├── tools.py            # @tool wrappers
+│   │   ├── agent_tools.py      # LangChain @tool bindings
 │   │   ├── prompt.py           # system prompt
 │   │   └── agent.py            # create_agent + result parsing
-│   └── tools/
+│   └── adapters/
 │       ├── logs.py             # mock log lookup
 │       ├── metrics.py          # mock metrics lookup
 │       └── slack.py            # Slack webhook sender
 ├── data/
-│   └── sample_incident.json
+│   ├── sample_incident.json          # checkout error-rate spike
+│   ├── sample_memory_leak.json
+│   ├── sample_db_saturation.json
+│   ├── sample_kafka_lag.json
+│   ├── sample_external_latency.json
+│   └── sample_auth_errors.json
 ├── requirements.txt
 └── README.md
 ```
@@ -142,7 +147,7 @@ Then:
 ## Design notes
 
 - Agent orchestration uses LangChain `create_agent`
-- Tools use `@tool` wrappers over existing `app/tools/*` implementations
+- LangChain `@tool` bindings in `agent_tools.py` wrap `app/adapters/*` implementations
 - System prompt includes operational rules (max one call per evidence tool, ignore tool `error` payloads, confidence rubric)
 - Rule engine remains as fallback, not the primary decision path
 - No RAG in this stage: investigation relies on tools for live/mock evidence

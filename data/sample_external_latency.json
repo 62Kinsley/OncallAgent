@@ -1,0 +1,9 @@
+{
+  "incident_id": "inc-2026-07-22-005",
+  "title": "payments-proxy external API latency",
+  "severity": "SEV2",
+  "service": "payments-proxy",
+  "started_at": "2026-07-22T22:35:00Z",
+  "summary": "External payment API p95 latency above 2s for 5 minutes.",
+  "initial_context": "Vendor status page shows degraded performance in us-west."
+}

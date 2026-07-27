@@ -1,3 +1,4 @@
+"""LangChain @tool bindings over investigation adapters."""
 from __future__ import annotations
 
 import json
@@ -5,8 +6,8 @@ from typing import Any
 
 from langchain_core.tools import tool
 
-from tools.logs import query_logs as _query_logs
-from tools.metrics import query_metrics as _query_metrics
+from adapters.logs import query_logs as _query_logs
+from adapters.metrics import query_metrics as _query_metrics
 
 
 @tool

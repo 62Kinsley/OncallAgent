@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
-
 from incident import Incident
 from runtime import process_incident
 
 
 def load_incident(path: str) -> Incident:
+    #Parse the JSON string into a Python dict.
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     return Incident.model_validate(raw)
 

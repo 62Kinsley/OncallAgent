@@ -6,7 +6,7 @@ from langchain.agents import create_agent
 
 from langchain_agent.model import ChatModelFactory
 from langchain_agent.prompt import SYSTEM_PROMPT
-from langchain_agent.tools import get_tools
+from langchain_agent.agent_tools import get_tools
 
 
 def build_agent():
