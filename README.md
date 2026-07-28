@@ -48,6 +48,7 @@ sample incident JSON
 - [x] Rule-based hypothesis fallback
 - [x] Streamlit UI
 - [x] Slack Incoming Webhook notifications
+- [x] Basic pytest suite (incident / adapters / hypothesis / runtime)
 - [ ] Optional runbook RAG
 - [ ] Optional GitHub issue/PR remediation
 - [ ] Short-lived credentials (e.g. Teleport)
@@ -229,6 +230,15 @@ Then:
 2. Click **Run Investigation**
 3. Review mode, hypothesis, explanation, Slack status, agent trace, and evidence
 
+## Run tests
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+Tests force `USE_MOCK_ADAPTERS=true` and mock Slack/agent where needed, so they do not call AWS or your LLM.
+
 ## Design notes
 
 - Agent orchestration uses LangChain `create_agent`
@@ -244,7 +254,7 @@ Then:
 - Add lightweight middleware (timeouts, audit logging, safety checks)
 - Optional runbook / PIR RAG
 - Optional GitHub issue/PR creation (off by default)
-- Add basic tests (`pytest`) and richer incident scenarios
+- Richer incident scenarios and adapter integration tests
 
 ## License
 

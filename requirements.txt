@@ -7,3 +7,4 @@ langchain
 langchain-openai
 langchain-core
 boto3
+pytest
