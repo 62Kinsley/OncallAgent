@@ -40,3 +40,16 @@ def max_log_events() -> int:
     except ValueError:
         value = 20
     return max(1, min(value, 50))
+
+
+def metrics_namespace() -> str:
+    """Custom demo namespace (not AWS/EC2) so teaching data is easy to seed."""
+    return os.getenv("CW_METRICS_NAMESPACE", "OncallAgent/Demo").strip() or "OncallAgent/Demo"
+
+
+def metrics_period_seconds() -> int:
+    try:
+        value = int(os.getenv("CW_METRICS_PERIOD_SECONDS", "60"))
+    except ValueError:
+        value = 60
+    return max(60, min(value, 300))

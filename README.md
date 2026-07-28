@@ -72,6 +72,8 @@ OncallAgent/
 │       ├── logs.py             # mock or CloudWatch Logs
 │       ├── metrics.py          # mock or CloudWatch Metrics
 │       └── slack.py            # Slack webhook sender
+├── scripts/
+│   └── seed_demo_metrics.sh    # put demo CloudWatch custom metrics
 ├── data/
 │   ├── sample_incident.json          # checkout error-rate spike
 │   ├── sample_memory_leak.json
@@ -136,6 +138,7 @@ Default path stays mock. Only switch when you intentionally want live AWS eviden
 | `CW_LOOKBACK_MINUTES` | `15` (max 60) | Small time window = small scan |
 | `CW_MAX_LOG_EVENTS` | `20` (max 50) | Hard cap on returned events |
 | Logs filter | `ERROR` | Avoid scanning every INFO line |
+| `CW_METRICS_NAMESPACE` | `OncallAgent/Demo` | Custom demo metrics (not AWS/EC2) |
 
 ### Enable live CloudWatch
 
@@ -160,16 +163,29 @@ aws configure
 
 (`CW_LOG_GROUP_PREFIX` defaults to `/aws/service`)
 
-4. In `.env`:
+4. Seed demo metrics (ErrorRate / P95 latency / CPU):
+
+```bash
+chmod +x scripts/seed_demo_metrics.sh
+./scripts/seed_demo_metrics.sh checkout-api
+# wait 30-60 seconds for CloudWatch to index datapoints
+```
+
+5. In `.env`:
 
 ```text
 USE_MOCK_ADAPTERS=false
 AWS_REGION=us-west-2
 CW_LOOKBACK_MINUTES=15
 CW_MAX_LOG_EVENTS=20
+CW_METRICS_NAMESPACE=OncallAgent/Demo
+# optional teaching deploy context
+CW_DEMO_DEPLOY_VERSION=v1.84.2
+CW_DEMO_DEPLOYED_AT=2026-07-22T22:10:00Z
+CW_DEMO_DEPLOY_CHANGE=timeout reduced from 3000ms to 300ms
 ```
 
-5. Run once:
+6. Run once:
 
 ```bash
 python app/main.py --incident data/sample_incident.json
@@ -224,7 +240,7 @@ Then:
 
 ## Roadmap
 
-- Improve CloudWatch metric dimensions / service mapping
+- Optional production metric dimension mapping beyond the demo namespace
 - Add lightweight middleware (timeouts, audit logging, safety checks)
 - Optional runbook / PIR RAG
 - Optional GitHub issue/PR creation (off by default)
